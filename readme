@@ -1,0 +1,35 @@
+# Reseqr
+
+A software tool will be developed to solve the procedural problem of renaming image files in batches processed by the University Libraries' Imaging Services to correct batch orderings according to a "resequence" order as specified in METS files associated with each batch.
+
+## Project Setup
+
+   - operate on a single batch per program execution
+   - validate image file batch for expected naming conventions
+   - validate batch METS files for expected conventions
+   - validate correlation between image files and METS descriptors
+   - report validation results to screen and file
+   - determine and report intended file renaming
+   - option to only validate and report
+   - rename image files in two-phase process to avoid collision
+   - mark batches to avoid double execution
+   - report on renaming results
+   - editable configuration file for each project's constant data
+   - allow for differing concurrent projects
+
+## Usage
+
+TODO: Write usage instructions
+
+## Deploying
+
+## History
+
+TODO: Write history
+
+## Credits
+
+Billy Hays
+
+## License
+

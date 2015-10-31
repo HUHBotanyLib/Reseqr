@@ -1,6 +1,6 @@
 # Reseqr
 
-Reseqr is a software tool developed for the Harvard Botany Libraries to rename batches of image files processed by the University Libraries' Imaging Services.  This operation validates the METS files with respect to their correlation to the image files on disk and corrects the sequence number in file names as specified in METS files associated with each batch.
+Reseqr is a software tool developed for the Harvard Botany Libraries to rename batched image files processed by the University Libraries' Imaging Services.  This operation validates the METS files with respect to their correlation to the image files on disk and corrects the sequence number in file names as specified in METS files associated with each batch.
 
 The specifics of a given project have been localized in a configuration file, so this tool may be adapted for other units with similar needs.  
 
@@ -34,7 +34,7 @@ Reseqr is written in Python3 (v.3.4) and can be run on Windows, OSX, and Linux m
 Reseqr is run from the command line using the Python 3 interpreter or in the Python 3 shell.
 The python command can be either "python" as on Windows or "python3" on other operating systems.
 
-python reseqr.py -h -s -c <config> -p <project name> -b <batch name>
+`python reseqr.py -h -s -c <config> -p <project name> -b <batch name>`
 
 where the options indicate:
    -       -h            help
@@ -58,5 +58,7 @@ python reseqr.py -s -b Batch1
 
 W. Hays
 
-## License - MIT License (see file LICENSE)
+## License 
+
+MIT License (see file LICENSE)
 

@@ -22,11 +22,30 @@ Reseqr is written in Python3 (v.3.4) and can be run on Windows, OSX, and Linux m
 
 
 ## Project Setup
-
+   - Image file batches for a given project are located in a single directory specified in the config 
+   - Each batch is assumed to contain one or more subdirectories that contain the image files
+   - METS files are located in the batch subdirectory called 'mets'
+   - METS files are in a one-to-one correspondence with the image file subdirectories but are not named so as to determine the pairing.  This is determined by the program reading the METS files.
+   - The batch processing report is written to the batch directory.
+   - The generated renaming script for a batch covers all the image files in all the subdirectories and is written to the batch directory.
 
 ## Usage
 
-Reseqr is a command line application.   
+Reseqr is run from the command line using the Python 3 interpreter or in the Python 3 shell.
+The python command can be either "python" as on Windows or "python3" on other operating systems.
+
+python reseqr.py -h -s -c <config> -p <project name> -b <batch name>
+
+where the options indicate:
+   -       -h            help
+   -       -s            write renaming script to batch directory
+   -       -c            configuration file path and name, overrides default
+   -       -p            project name identifier in configuration file, overrides default
+   -       -b            batch directory name to be processed (required option)
+         
+For example, running the program on Batch1 in the default project with the default config would be:
+
+python reseqr.py -s -b Batch1
 
 ## Deploying
 

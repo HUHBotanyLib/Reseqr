@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<mets LABEL="rsqr test - count error; continuity errors; mismatch with fileGrp.  Asa Gray correspondence files of the Gray Herbarium, 1838-1892 (inclusive).  Correspondence with Joseph Dalton Hooker.  Botany Libraries, Archives of the Gray Herbarium, Harvard University Herbaria, Cambridge, Mass." TYPE="PAGEDOBJECT" PROFILE="HULPDS" xmlns="http://www.loc.gov/METS/" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:pds="http://hul.harvard.edu/ois/xml/ns/pds" xsi:schemaLocation="http://www.loc.gov/METS/ http://www.loc.gov/standards/mets/mets.xsd http://hul.harvard.edu/ois/xml/ns/pds http://hul.harvard.edu/ois/xml/xsd/pds/pds.xsd">
+ <dmdSec ID="C0" GROUPID="CITATION">
+  <mdWrap MDTYPE="MODS">
+   <xmlData>
+    <mods:mods xmlns:mods="http://www.loc.gov/mods/v3" xsi:schemaLocation="http://www.loc.gov/mods/v3 http://www.loc.gov/standards/mods/v3/mods-3-0.xsd" version="3.0">
+     <mods:name>
+      <mods:displayForm>Harvard University.</mods:displayForm>
+     </mods:name>
+     <mods:titleInfo>
+      <mods:title>Asa Gray correspondence files of the Gray Herbarium,</mods:title>
+     </mods:titleInfo>
+     <mods:identifier type="hollis">014011768</mods:identifier>
+     <mods:identifier type="uri" displayLabel="OASIS Finding aid">http://nrs.harvard.edu/urn-3:FMUS.GRA:gra00026</mods:identifier>
+    </mods:mods>
+   </xmlData>
+  </mdWrap>
+ </dmdSec>
+ <fileSec>
+  <fileGrp ID="image-jp2">
+   <file ID="FIMG-JP2-GenC_01" MIMETYPE="image/jp2">
+    <FLocat LOCTYPE="OTHER" OTHERLOCTYPE="OracleID" xlink:type="simple" xlink:href="49799309"/>
+   </file>
+   <file ID="FIMG-JP2-GenC_02" MIMETYPE="image/jp2">
+    <FLocat LOCTYPE="OTHER" OTHERLOCTYPE="OracleID" xlink:type="simple" xlink:href="49799310"/>
+   </file>
+   <file ID="FIMG-JP2-GenC_03" MIMETYPE="image/jp2">
+    <FLocat LOCTYPE="OTHER" OTHERLOCTYPE="OracleID" xlink:type="simple" xlink:href="49799312"/>
+   </file>
+  </fileGrp>
+ </fileSec>
+ <structMap>
+  <div DMDID="C0" TYPE="CITATION">
+   <div ORDER="1" LABEL="Hooker, Joseph D. June 12, 1873 [1]" TYPE="PAGE">
+    <fptr FILEID="FIMG-JP2-GenB_01"/>
+   </div>
+   <div ORDER="3" LABEL="Hooker, Joseph D. June 12, 1873 [2]" TYPE="PAGE">
+    <fptr FILEID="FIMG-JP2-GenC_0005"/>
+   </div>
+  </div>
+ </structMap>
+</mets>

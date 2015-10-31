@@ -1,0 +1,53 @@
+Reseqr Requirements
+
+Processing
+
+- execution of program processes a single, specified batch
+- except for very early termination, write batch processing report per run
+
+Command line options
+ - configuration file, otherwise default file
+ - project id, otherwise default in config
+ - batch name, required
+ - flag to write renaming script
+ - help
+
+
+File naming conventions to enable processing
+ - in each SUBDIR on drive:  SUBDIR_SEQNO  (with obvious redundancy)
+ - in each METS file:        HULPREFIX-SUBDIR_SEQNO
+ - METS filenames aren't useful
+     -  corresponding METS files must be placed in the correct batch by staff
+     -  correlation to batch is determined by examining the FILEIDs' SUBDIR values
+
+
+File system validation with early exit on error
+
+- specified project directory exists
+- specified batch directory exists
+- check that batch subdirectories exist
+- ? filter for extension in image files, e.g. .jp2
+-
+
+METS file validation with early exit on error
+
+- check for METS files in batch subdirectory 'mets'
+- check for METS structMap/div/div/fptr tags
+- check each div/div has only one fptr tag
+- check that FILEID structure matches pattern
+- check for a single prefix in all the FILEIDs
+- check for correlation between prefix in FILEID and a batch subdirectory
+  (this correlation is a critical assumption)
+- check for one-to-one correspondence between FILEIDs and drive files
+
+
+
+Renaming
+
+- if specified, a script will be generated in the batch directory to rename files
+
+- rename image files according to the sequence in the METS structMap.order element for each file
+- prevent duplicate processing of the same batch
+- even if the order and fptr sequence numbers are the same, do rename files in order to use additional prefix
+
+-

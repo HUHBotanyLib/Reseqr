@@ -11,12 +11,10 @@ NS = { 'METS' : 'http://www.loc.gov/METS/' }
 RPT_LINES = []
 
 HELP = '''\nSYNOPSIS
-    python3 reseqr.py -h -v -r -f -c <config> -p <project name> -b <batch name>
+    python3 reseqr.py -h -s -c <config> -p <project name> -b <batch name>
 DESCRIPTION
         -h            help
-        -v            verbose
         -s            write renaming script to batch directory
-        -f            force
         -c            configuration file path and name, overrides default
         -p            project name identifier in configuration file, overrides default
         -b            batch directory name to be processed (required option)

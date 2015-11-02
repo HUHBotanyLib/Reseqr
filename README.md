@@ -1,10 +1,10 @@
 # Reseqr
 
-Reseqr is a software tool developed for the Harvard Botany Libraries to rename batched image files processed by the University Libraries' Imaging Services.  This operation validates the METS files with respect to their correlation to the image files on disk and corrects the sequence number in file names as specified in METS files associated with each batch.
+Reseqr is a small software tool developed for the Harvard Botany Libraries to rename large batches of image files processed by the University Libraries' Imaging Services.  This operation validates the associated METS files with respect to their correlation to the image files on disk and corrects the sequence number in file names as specified in METS files associated with each batch.  Specifically for each file item, the "ORDER" integer value is used to replace the sequence number at the end of the FILEID value, which is the filename on the drive (with a prefix attached). 
 
-The specifics of a given project have been localized in a configuration file, so this tool may be adapted for other units with similar needs.  
+The specifics of a given project of collated batches have been localized in a configuration file, so this tool may be adapted for other image file processing operations with similar needs.  
 
-Reseqr is written in Python3 (v.3.4) and can be run on Windows, OSX, and Linux machines.  The PyYAML library must be installed additionally.
+Reseqr is written in Python3 (v.3.4) and can be run on Windows, OSX, and Linux machines.  Additionally, the PyYAML library must be installed.
 
 ## Functionality
 
@@ -29,6 +29,14 @@ Reseqr is written in Python3 (v.3.4) and can be run on Windows, OSX, and Linux m
    - The batch processing report is written to the batch directory.
    - The generated renaming script for a batch covers all the image files in all the subdirectories and is written to the batch directory.
 
+## Configuration file
+
+  -  Uses YAML as the markup language, for its simplicity
+  -  Default configuration file is called reseqr.config in distribution directory
+  -  Default project can be specified in the config
+  -  Multiple project configurations are listed in different sections
+  -  Use test project as a model for configuring new projects
+
 ## Usage
 
 Reseqr is run from the command line using the Python 3 interpreter or in the Python 3 shell.
@@ -45,9 +53,20 @@ where the options indicate:
          
 For example, running the program on Batch1 in the default project with the default config would be:
 
-python reseqr.py -s -b Batch1
+`python reseqr.py -s -b Batch1`
+
+## Testing
+
+Reseqr comes with a test project that constitutes a suite of tests for different error conditions.
+Actual image files are not used, only tiny text files named according to the expected image filenaming patterns.
+
+  - Batch1    No errors
+  - Batch2    
+  - Batch3
 
 ## Deploying
+
+Download the zip archive from the GitHub project page and extract to the local drive.  
 
 ## History
 
@@ -56,7 +75,9 @@ python reseqr.py -s -b Batch1
 
 ## Credits
 
-W. Hays
+J.J. Ford (project manager)
+W. Hays (developer)
+
 
 ## License 
 

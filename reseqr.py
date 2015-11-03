@@ -3,7 +3,7 @@ import xml.etree.ElementTree as etree
 import yaml
 
 from os import listdir     #, rename
-from os.path import isdir, isfile, join, splitext, abspath
+from os.path import isdir, isfile, join, splitext, abspath, exists
 
 # namespace for METS
 NS = { 'METS' : 'http://www.loc.gov/METS/' }
@@ -90,7 +90,7 @@ def get_batch_data(batch):
         rpt('batch param required. ' + HELP, True)
 
     batchpath = join(config['project_path'], batch)
-    if not isdir(batchpath):
+    if not exists(batchpath):
         rpt('Specified batch does not exist: ' + batchpath, True)
 
     rpt('Processing batch "{}"\n'.format(batch))
@@ -171,6 +171,9 @@ def get_mets_data(batch):
     re_pattern = re.compile(r'' + config['imaging_services_prefix'] + '((\w+)_(\d+))')
 
     metsbatchpath = join(config['mets_path'], batch, 'mets')
+
+    if not exists(metsbatchpath):
+        rpt('METS directory for batch {} not found'.format(batch), true)
 
     metsfiles = sorted([ f for f in listdir(metsbatchpath) if splitext(f)[1] == '.xml' ])  # join path?
     #rpt(str(len(metsfiles)) + ' metsfiles: ' + str(metsfiles))

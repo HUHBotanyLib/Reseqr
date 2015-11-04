@@ -1,8 +1,8 @@
-import sys, getopt, re
+import sys, getopt, re, datetime
 import xml.etree.ElementTree as etree
 import yaml
 
-from os import listdir     #, rename
+from os import listdir, rename
 from os.path import isdir, isfile, join, splitext, abspath, exists
 
 # namespace for METS
@@ -22,9 +22,10 @@ DESCRIPTION
 
 config = None  #global access
 
-def rpt(msg, quit = False):
+def rpt(msg, quit = False, quiet = False):
     RPT_LINES.append(msg)
-    print(msg)
+    if not quiet:
+        print(msg)
 
     if quit:
         if config is not None:
@@ -40,7 +41,7 @@ def read_project_config(config_file, project):
 
     if config_file == None:
         config_file = 'reseqr.config'  # in current working directory
-        rpt('Using default config file: ' + config_file)
+        rpt('  Using default config file: ' + config_file)
 
     try:
         fyaml = open(config_file)
@@ -261,50 +262,54 @@ def write_renaming_script(metsdata_dict, batch):
             chunk = ''
             ren_prefix = config['local_renaming_prefix'] + subdir + '_'
             for fptr in metsdata_dict[subdir]:
-                #print(str(fptr))
-                #fpath = join(subdir, fptr['filename'])
-                #print(str(fpath))
-
-                #check that not renaming to self
-                #src = join(subdir, fptr['filename'])
-                #dest = join(subdir, 'R_' + subdir + '_' + fptr['order'])
-
                 #put the same zero padding in the new file name as found in the FILEID
                 template = '{}{:0' + str(len(fptr['seqno'])) + 'd}'
                 chunk += ('os.rename( \'{}\', \'{}\')\n'.format(join(subdir, fptr['filename']),
                           join(subdir, template.format(ren_prefix, int(fptr['order'])))))
 
-                lc = lc + 1
+                lc += 1
             script.write(chunk + '\n\n')
-    rpt('Wrote script {} with {:d} lines'.format(fname, lc ))
+    rpt('Wrote script {} with {:d} renaming lines'.format(fname, lc ))
 
 
-def process_files(metsdata_dict, batch, exec):
-    '''
-    for files in the batch subdirectories,  either write a Python script to do renaming (exec == False)
-    or rename files directly (exec == True)
-    if renaming directly, each change action is written to the batch report
-    currently don't separate scripts for each subdir
+def rename_files(metsdata_dict, batchpath):
+    count = 0
 
-    ToDo: wait for go_ahead on direct renaming before implementing this
-    '''
+    try:
+        for subdir in sorted(metsdata_dict.keys()):
+            ren_prefix = config['local_renaming_prefix'] + subdir + '_'
+            for fptr in metsdata_dict[subdir]:
 
+                #put the same zero padding in the new file name as found in the FILEID
+                template = '{}{:0' + str(len(fptr['seqno'])) + 'd}'
+
+                src = join(subdir, fptr['filename'])
+                dest = join(subdir, template.format(ren_prefix, int(fptr['order'])))
+
+                rename(join(batchpath, src), join(batchpath, dest))
+                rpt('Renamed {} to {}'.format(src, dest), False, True)  #don't write to screen
+                count += 1
+    except IOError as err:
+        rpt('Error renaming files: {}'.format(err), True)
+
+    rpt('Renamed {} files\n'.format( count ))
 
 
 def main():
 
-    print('Image File Resequencer: Reseqr')
+    rpt('Image File Resequencer: Reseqr')
+    rpt('  Processing at {}'.format(datetime.datetime.now()))
 
     #default command line option values
     write_script = False
+    execute_rename = False
     force = False
     config_file = None
     project = None
     batch = None
 
     try:
-#      opts, args = getopt.getopt(sys.argv[1:],"hi:o:,["ifile=","ofile="]")
-        opts, args = getopt.getopt(sys.argv[1:],"hvsfc:p:b:")
+        opts, args = getopt.getopt(sys.argv[1:],"hvsxc:p:b:")
     except getopt.GetoptError:
         rpt('getopterr: ' + HELP, True)
 
@@ -312,11 +317,10 @@ def main():
         if opt == '-h':
             print(HELP)
             sys.exit()
-        #elif opt == '-v':
-        #    global VERBOSE
-        #    VERBOSE = True
         elif opt == '-s':
             write_script = True
+        elif opt == '-x':
+            execute_rename = True
         #elif opt == '-f':
         #    force = True
         elif opt == 'c':
@@ -341,13 +345,12 @@ def main():
     # valid correlation
     compare_drive_to_mets(subdirs, subdir_dict, metsdata_dict)
 
-    # determine renaming
-    # for each subdir, calculate the differences between order number and seq number to identify files to be renamed
-
     rpt('\n')
 
     if write_script:
         write_renaming_script(metsdata_dict, batch)
+    elif execute_rename:
+        rename_files(metsdata_dict, join(config['project_path'], batch))
 
     rpt('Processing completed', True)
 

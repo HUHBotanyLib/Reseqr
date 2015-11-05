@@ -272,6 +272,39 @@ def write_renaming_script(metsdata_dict, batch):
     rpt('Wrote script {} with {:d} renaming lines'.format(fname, lc ))
 
 
+def write_undo_script(metsdata_dict, batch):
+    '''
+    currently only Python
+    currently don't separate scripts for each subdir
+
+    note checking if script already exists, assume overwriting is intentional
+    '''
+    fname = join(config['project_path'], batch , batch + '-undo-script.py')
+    lcount = 0
+
+    try:
+        with open(fname, 'w') as script:
+            script.write('import os\n\n')
+
+            for subdir in sorted(metsdata_dict.keys()):   #ToDo: use subdirs list instead
+                chunk = ''
+                ren_prefix = config['local_renaming_prefix'] + subdir + '_'
+                for fptr in metsdata_dict[subdir]:
+
+                    #put the same zero padding in the new file name as found in the FILEID
+                    template = '{}{:0' + str(len(fptr['seqno'])) + 'd}'
+                    chunk += ('os.rename( \'{1}\', \'{0}\')\n'.format(join(subdir, fptr['filename']),
+                              join(subdir, template.format(ren_prefix, int(fptr['order'])))))
+
+                    lcount += 1
+                script.write(chunk + '\n\n')
+
+    except (OSError, IOError) as e:
+        rpt('Error writing undo script: {}'.format(e), True)
+
+    rpt('Wrote undo script {} with {:d} renaming lines'.format(fname, lcount))
+
+
 def rename_files(metsdata_dict, batchpath):
     count = 0
 
@@ -345,12 +378,15 @@ def main():
     # valid correlation
     compare_drive_to_mets(subdirs, subdir_dict, metsdata_dict)
 
-    rpt('\n')
+    #rpt('\n')
 
     if write_script:
         write_renaming_script(metsdata_dict, batch)
     elif execute_rename:
         rename_files(metsdata_dict, join(config['project_path'], batch))
+
+    if write_script or execute_rename:
+        write_undo_script(metsdata_dict, batch)
 
     rpt('Processing completed', True)
 

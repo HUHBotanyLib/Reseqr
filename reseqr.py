@@ -85,10 +85,8 @@ def read_project_config(config_file, project):
     global config
     config = pconfig
 
-def get_batch_data(batch):
 
-    if batch == None:
-        rpt('batch param required. ' + HELP, True)
+def get_batch_data(batch):
 
     batchpath = join(config['project_path'], batch)
     if not exists(batchpath):
@@ -118,6 +116,7 @@ def get_batch_data(batch):
                 rpt('subdirectory {} contains file already renamed'.format(sd), True)
 
     return subdirs, subdir_dict
+
 
 def get_mets_file_data(re_pattern, mf):
     '''
@@ -174,7 +173,7 @@ def get_mets_data(batch):
     metsbatchpath = join(config['mets_path'], batch, 'mets')
 
     if not exists(metsbatchpath):
-        rpt('METS directory for batch {} not found'.format(batch), true)
+        rpt('METS directory for batch {} not found'.format(batch), True)
 
     metsfiles = sorted([ f for f in listdir(metsbatchpath) if splitext(f)[1] == '.xml' ])  # join path?
     #rpt(str(len(metsfiles)) + ' metsfiles: ' + str(metsfiles))
@@ -251,24 +250,29 @@ def write_renaming_script(metsdata_dict, batch):
 
     lc = 0
 
-    #try:
-    with open(fname, 'w') as script:
-        script.write('import os\n\n')
+    try:
+        with open(fname, 'w') as script:
+            script.write('import os\n\n')
+            script.write('print(\'Renaming of files in batch {}\')\n'.format(batch))
 
-    #except (OSError, IOError) as e:
-    #    rpt('Unable to open ' + fname + ' for renaming script', True, False)
 
-        for subdir in sorted(metsdata_dict.keys()):   #ToDo: use subdirs list instead
-            chunk = ''
-            ren_prefix = config['local_renaming_prefix'] + subdir + '_'
-            for fptr in metsdata_dict[subdir]:
-                #put the same zero padding in the new file name as found in the FILEID
-                template = '{}{:0' + str(len(fptr['seqno'])) + 'd}'
-                chunk += ('os.rename( \'{}\', \'{}\')\n'.format(join(subdir, fptr['filename']),
-                          join(subdir, template.format(ren_prefix, int(fptr['order'])))))
+            for subdir in sorted(metsdata_dict.keys()):   #ToDo: use subdirs list instead
+                chunk = ''
+                ren_prefix = config['local_renaming_prefix'] + subdir + '_'
+                for fptr in metsdata_dict[subdir]:
+                    #put the same zero padding in the new file name as found in the FILEID
+                    template = '{}{:0' + str(len(fptr['seqno'])) + 'd}'
+                    chunk += ('os.rename( \'{}\', \'{}\')\n'.format(join(subdir, fptr['filename']),
+                              join(subdir, template.format(ren_prefix, int(fptr['order'])))))
 
-                lc += 1
-            script.write(chunk + '\n\n')
+                    lc += 1
+                script.write(chunk + '\n\n')
+
+            script.write('print(\'Renaming complete.\')')
+
+    except (OSError, IOError) as e:
+        rpt('Error writing renaming script: {}'.format(e), True)
+
     rpt('Wrote script {} with {:d} renaming lines'.format(fname, lc ))
 
 
@@ -285,6 +289,7 @@ def write_undo_script(metsdata_dict, batch):
     try:
         with open(fname, 'w') as script:
             script.write('import os\n\n')
+            script.write('print(\'Undo renaming of file in batch {}\')\n'.format(batch))
 
             for subdir in sorted(metsdata_dict.keys()):   #ToDo: use subdirs list instead
                 chunk = ''
@@ -298,6 +303,8 @@ def write_undo_script(metsdata_dict, batch):
 
                     lcount += 1
                 script.write(chunk + '\n\n')
+
+            script.write('print(\'Undo complete.\')')
 
     except (OSError, IOError) as e:
         rpt('Error writing undo script: {}'.format(e), True)
@@ -325,7 +332,7 @@ def rename_files(metsdata_dict, batchpath):
     except IOError as err:
         rpt('Error renaming files: {}'.format(err), True)
 
-    rpt('Renamed {} files\n'.format( count ))
+    rpt('Renamed {} files\n'.format(count))
 
 
 def main():
@@ -363,6 +370,10 @@ def main():
         elif opt == "-b":
             batch = arg
 
+    #required option
+    if batch == None:
+        rpt('batch param required. ' + HELP, True)
+
     # assign to global
     read_project_config(config_file, project)
 
@@ -378,7 +389,7 @@ def main():
     # valid correlation
     compare_drive_to_mets(subdirs, subdir_dict, metsdata_dict)
 
-    #rpt('\n')
+    rpt('\n')
 
     if write_script:
         write_renaming_script(metsdata_dict, batch)

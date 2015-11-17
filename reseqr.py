@@ -220,9 +220,6 @@ def compare_drive_to_mets(subdirs, subdir_dict, metsdata_dict):
     else:
         rpt('    subdirectories match mets file prefixes')
 
-    #if len(VAL_ERRS) > 0:
-    #    rpt('    exiting early with validation errors', True, True)
-
     #compare file counts and fptr counts - check all before exiting on error
     file_mismatch = False
 
@@ -232,7 +229,8 @@ def compare_drive_to_mets(subdirs, subdir_dict, metsdata_dict):
         fptrcount = len(metsdata_dict[sd])
         #print('sd ' + sd + ' fptr count: ' + str(fptrcount))
         if len(subdir_dict[sd]) != len(metsdata_dict[sd]):
-            rpt('In subdirectory {} mismatch of file counts with METS fptrs {}'.format(sd, str(fcount), str(fptrcount)), True)
+            file_mistmatch = True
+            rpt('    In subdirectory {} mismatch of {} file counts with {} METS fptrs'.format(sd, str(fcount), str(fptrcount)))
         else:
             rpt('    subdirectory {} has same number of files as listed by associated mets file'.format(sd))
 
@@ -241,7 +239,7 @@ def compare_drive_to_mets(subdirs, subdir_dict, metsdata_dict):
             if fptr['filename'] + config['extension'] not in subdir_dict[sd]:
                 if not file_mismatch:
                     file_mismatch = True
-                    rpt('File mismatches:')
+                    rpt('      File mismatches:')
                 rpt('    file {} listed in mets not found in drive subdirectory'.format(fptr['filename']))
             #else:
             #    print('found {}'.format(fptr['filename']))

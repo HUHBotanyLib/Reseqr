@@ -1,6 +1,6 @@
 # Reseqr
 
-Reseqr is a small software tool developed for the Harvard Botany Libraries to rename large batches of image files processed by the University Libraries' Imaging Services.  This operation validates the associated METS files with respect to their correlation to the image files on disk and corrects the sequence number in file names as specified in METS files associated with each batch.  Specifically for each file item, the "ORDER" integer value is used to replace the sequence number at the end of the FILEID value, which is the filename on the drive (with a prefix attached).
+Reseqr is a small software tool for the command line developed for the Harvard Botany Libraries to rename large batches of image files processed by the University Libraries' Imaging Services.  This operation validates the associated METS files with respect to their correlation to the image files on disk and corrects the sequence number in file names as specified in METS files associated with each batch.  Specifically for each file item, the "ORDER" integer value is used to replace the sequence number at the end of the FILEID value, which is the filename on the drive (with a prefix attached).
 
 The specifics of a given project of collated batches have been localized in a configuration file, so this tool may be adapted for other image file processing operations with similar needs.
 

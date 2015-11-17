@@ -223,7 +223,9 @@ def compare_drive_to_mets(subdirs, subdir_dict, metsdata_dict):
     #if len(VAL_ERRS) > 0:
     #    rpt('    exiting early with validation errors', True, True)
 
-    #compare file counts and fptr counts
+    #compare file counts and fptr counts - check all before exiting on error
+    file_mismatch = False
+
     for sd in subdirs:
         fcount = len(subdir_dict[sd])
         #print('sd ' + sd + ' file count: ' + str(fcount))
@@ -234,14 +236,20 @@ def compare_drive_to_mets(subdirs, subdir_dict, metsdata_dict):
         else:
             rpt('    subdirectory {} has same number of files as listed by associated mets file'.format(sd))
 
-        #exit if any file not found on drive
+        #check if any file not found on drive
         for fptr in metsdata_dict[sd]:
             if fptr['filename'] + config['extension'] not in subdir_dict[sd]:
-                rpt('file {} listed in mets not found in drive subdirectory'.format(fptr['filename']), True)
+                if not file_mismatch:
+                    file_mismatch = True
+                    rpt('File mismatches:')
+                rpt('    file {} listed in mets not found in drive subdirectory'.format(fptr['filename']))
             #else:
             #    print('found {}'.format(fptr['filename']))
 
-    rpt('    confirmed one-to-one correspondence between all METS fptr items and files on drive')
+    if file_mismatch:
+        rpt('    end listing of mismatches found between METS fptr items and files on drive', True)
+    else:
+        rpt('    confirmed one-to-one correspondence between all METS fptr items and files on drive')
 
 
 def write_renaming_script(metsdata_dict, batch):
@@ -350,7 +358,7 @@ def main():
     #default command line option values
     write_script = False
     execute_rename = False
-    force = False
+#    force = False
     config_file = None
     project = None
     batch = None

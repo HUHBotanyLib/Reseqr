@@ -62,7 +62,6 @@ def read_project_config(config_file, project):
     if project not in config_all:
         rpt('project "' + project + '" not listed in configuration file', True)
 
-
     pconfig = config_all[project]
 
     #project_name = config['project_name']
@@ -82,6 +81,10 @@ def read_project_config(config_file, project):
 
     if 'mets_path' not in pconfig:
         rpt('METS path not available in config.', True)
+
+    if 'extension' not in pconfig:
+        pconfig['extension'] = '.jp2'
+        rpt('Extension not in config, using .jp2')
 
     global config
     config = pconfig
@@ -168,6 +171,7 @@ def get_mets_file_data(re_pattern, mf):
 
     return prefix, fptr_data
 
+
 def get_mets_data(batch):
     re_pattern = re.compile(r'' + config['imaging_services_prefix'] + '((\w+)_(\d+))')
 
@@ -232,7 +236,7 @@ def compare_drive_to_mets(subdirs, subdir_dict, metsdata_dict):
 
         #exit if any file not found on drive
         for fptr in metsdata_dict[sd]:
-            if fptr['filename'] not in subdir_dict[sd]:
+            if fptr['filename'] + config['extension'] not in subdir_dict[sd]:
                 rpt('file {} listed in mets not found in drive subdirectory'.format(fptr['filename']), True)
             #else:
             #    print('found {}'.format(fptr['filename']))
@@ -263,8 +267,9 @@ def write_renaming_script(metsdata_dict, batch):
                 for fptr in metsdata_dict[subdir]:
                     #put the same zero padding in the new file name as found in the FILEID
                     template = '{}{:0' + str(len(fptr['seqno'])) + 'd}'
-                    chunk += ('os.rename( \'{}\', \'{}\')\n'.format(join(subdir, fptr['filename']),
-                              join(subdir, template.format(ren_prefix, int(fptr['order'])))))
+                    chunk += ('os.rename( \'{0}{2}\', \'{1}{2}\')\n'.format(join(subdir, fptr['filename']),
+                              join(subdir, template.format(ren_prefix, int(fptr['order']))),
+                              config['extension']))
 
                     lc += 1
                 script.write(chunk + '\n\n')
@@ -299,8 +304,9 @@ def write_undo_script(metsdata_dict, batch):
 
                     #put the same zero padding in the new file name as found in the FILEID
                     template = '{}{:0' + str(len(fptr['seqno'])) + 'd}'
-                    chunk += ('os.rename( \'{1}\', \'{0}\')\n'.format(join(subdir, fptr['filename']),
-                              join(subdir, template.format(ren_prefix, int(fptr['order'])))))
+                    chunk += ('os.rename( \'{1}{2}\', \'{0}{2}\')\n'.format(join(subdir, fptr['filename']),
+                              join(subdir, template.format(ren_prefix, int(fptr['order']))),
+                              config['extension']))
 
                     lcount += 1
                 script.write(chunk + '\n\n')
@@ -321,10 +327,10 @@ def rename_files(metsdata_dict, batchpath):
             ren_prefix = config['local_renaming_prefix'] + subdir + '_'
             for fptr in metsdata_dict[subdir]:
 
-                #put the same zero padding in the new file name as found in the FILEID
-                template = '{}{:0' + str(len(fptr['seqno'])) + 'd}'
+                src = join(subdir, fptr['filename'] + config['extension'])
 
-                src = join(subdir, fptr['filename'])
+                #put the same zero padding in the new file name as found in the FILEID
+                template = '{}{:0' + str(len(fptr['seqno'])) + 'd}' + config['extension']
                 dest = join(subdir, template.format(ren_prefix, int(fptr['order'])))
 
                 rename(join(batchpath, src), join(batchpath, dest))

@@ -74,8 +74,6 @@ def read_project_config(config_file, project):
 
     rpt('\nProject: "{}" located at {}'.format(pconfig['project_name'], abspath(pconfig['project_path'])), False)
 
-    # FIXME these will break if err
-
     if 'project_path' not in pconfig:
         rpt('Project path not available in config.', True)
 
@@ -85,6 +83,9 @@ def read_project_config(config_file, project):
     if 'extension' not in pconfig:
         pconfig['extension'] = '.jp2'
         rpt('Extension not in config, using .jp2')
+
+    if 'strict_mode' not in pconfig:
+        pconfig['strict_mode'] = True
 
     global config
     config = pconfig
@@ -157,7 +158,7 @@ def get_mets_file_data(re_pattern, mf):
         if m:
             #print('group 1: ' + m.group(1) + '; group 2: ' + m.group(2) + '; group 3: ' + m.group(3))
             prefixes.add(m.group(2))
-            fptr_data.append({ 'order' : div.get("ORDER"), 'filename' : m.group(1), 'seqno' : m.group(3) })
+            fptr_data.append({ 'order' : div.get("ORDER"), 'filename' : m.group(1) + config['extension'], 'seqno' : m.group(3) })
         else:
             rpt('METS FILEID does not match regular expression', True)
 
@@ -199,12 +200,13 @@ def get_mets_data(batch):
 
     return metsdata_dict
 
+
 def compare_drive_to_mets(subdirs, subdir_dict, metsdata_dict):
     rpt('Validation:')
     # correlate batch subdirs and mets files
     # sort and compare subdirs and metsdata dictionaries
     if len(subdirs) != len(metsdata_dict):
-        rpt('subdirs count ' + str(len(subdirs)) + ' != mets count' + str(len(metsdata_dict)), True)
+        rpt('subdirs count {} != mets count {}'.format(len(subdirs), len(metsdata_dict)), True)
 
     set_subdirs = set(subdirs)
     set_metsdata = set(metsdata_dict.keys())
@@ -213,39 +215,57 @@ def compare_drive_to_mets(subdirs, subdir_dict, metsdata_dict):
         #list the differences
         diff_subdirs = set_subdirs - set_metsdata
         if len(diff_subdirs) > 0:
-            rpt('  subdirs without corresponding mets files: ' + str(diff_subdirs), True)
+            rpt('  subdirs without corresponding mets files: {}'.format(diff_subdirs), True)
         diff_metsdata = set_metsdata - set_subdirs
         if len(diff_metsdata) > 0:
-            rpt('  mets files without corresponding subdirs: ' + str(diff_metsdata), True)
+            rpt('  mets files without corresponding subdirs: {}'.format(diff_metsdata), True)
     else:
         rpt('    subdirectories match mets file prefixes')
 
     #compare file counts and fptr counts - check all before exiting on error
-    file_mismatch = False
+    files_unlisted = False                      #i.e. not in METS but on drive, not critical in non-strict mode
+    files_unlisted_threshold_reached = False
+    files_missing = False
 
     for sd in subdirs:
         fcount = len(subdir_dict[sd])
-        #print('sd ' + sd + ' file count: ' + str(fcount))
         fptrcount = len(metsdata_dict[sd])
-        #print('sd ' + sd + ' fptr count: ' + str(fptrcount))
+
         if len(subdir_dict[sd]) != len(metsdata_dict[sd]):
-            file_mistmatch = True
-            rpt('    In subdirectory {} mismatch of {} file counts with {} METS fptrs'.format(sd, str(fcount), str(fptrcount)))
+            rpt('    In subdirectory {} mismatch of {:d} files with {:d} METS fptrs'.format(sd, fcount, fptrcount))
         else:
             rpt('    subdirectory {} has same number of files as listed by associated mets file'.format(sd))
 
-        #check if any file not found on drive
-        for fptr in metsdata_dict[sd]:
-            if fptr['filename'] + config['extension'] not in subdir_dict[sd]:
-                if not file_mismatch:
-                    file_mismatch = True
-                    rpt('      File mismatches:')
-                rpt('    file {} listed in mets not found in drive subdirectory'.format(fptr['filename']))
-            #else:
-            #    print('found {}'.format(fptr['filename']))
+        #check for additional unlisted files not in METS
+        fname_set = { fptr['filename'] for fptr in metsdata_dict[sd] }
 
-    if file_mismatch:
-        rpt('    end listing of mismatches found between METS fptr items and files on drive', True)
+        unlisted_count = 0
+        for f in sorted(subdir_dict[sd]):
+            if f not in  fname_set:
+                if unlisted_count == 0:
+                    files_unlisted = True
+                    rpt('      Files in subdirectory {} with no corresonding fptr fileid in METS:'.format(sd))
+                unlisted_count += 1
+                rpt('        {}'.format(f))
+
+        if unlisted_count >= config['unlisted_files_threshold']:
+            files_unlisted_threshold_reached = True
+            rpt('      Threshold of {} unlisted files reached for subdirectory {}'.format(config['unlisted_files_threshold'], sd))
+
+        #check if any file not found on drive
+        missing_count = 0
+        for fptr in metsdata_dict[sd]:
+            if fptr['filename'] not in subdir_dict[sd]:
+                if missing_count == 0:
+                    files_missing = True
+                    rpt('      Filenames listed in METS not found in drive subdirectory {}'.format(sd))
+                missing_count += 1
+                rpt('        {}'.format(fptr['filename']))
+
+    if files_missing or files_unlisted_threshold_reached:
+        rpt('    end listing of mismatches', True)
+    if files_unlisted:
+        rpt('    end listing of mismatches', config['strict_mode'])
     else:
         rpt('    confirmed one-to-one correspondence between all METS fptr items and files on drive')
 
@@ -272,10 +292,9 @@ def write_renaming_script(metsdata_dict, batch):
                 ren_prefix = config['local_renaming_prefix'] + subdir + '_'
                 for fptr in metsdata_dict[subdir]:
                     #put the same zero padding in the new file name as found in the FILEID
-                    template = '{}{:0' + str(len(fptr['seqno'])) + 'd}'
-                    chunk += ('os.rename( \'{0}{2}\', \'{1}{2}\')\n'.format(join(subdir, fptr['filename']),
-                              join(subdir, template.format(ren_prefix, int(fptr['order']))),
-                              config['extension']))
+                    template = '{}{:0' + str(len(fptr['seqno'])) + 'd}' + config['extension']
+                    chunk += ('os.rename( \'{0}\', \'{1}\')\n'.format(join(subdir, fptr['filename']),
+                              join(subdir, template.format(ren_prefix, int(fptr['order'])))))
 
                     lc += 1
                 script.write(chunk + '\n\n')
@@ -309,10 +328,9 @@ def write_undo_script(metsdata_dict, batch):
                 for fptr in metsdata_dict[subdir]:
 
                     #put the same zero padding in the new file name as found in the FILEID
-                    template = '{}{:0' + str(len(fptr['seqno'])) + 'd}'
-                    chunk += ('os.rename( \'{1}{2}\', \'{0}{2}\')\n'.format(join(subdir, fptr['filename']),
-                              join(subdir, template.format(ren_prefix, int(fptr['order']))),
-                              config['extension']))
+                    template = '{}{:0' + str(len(fptr['seqno'])) + 'd}' + config['extension']
+                    chunk += ('os.rename( \'{1}\', \'{0}\')\n'.format(join(subdir, fptr['filename']),
+                              join(subdir, template.format(ren_prefix, int(fptr['order'])))))
 
                     lcount += 1
                 script.write(chunk + '\n\n')
@@ -333,7 +351,7 @@ def rename_files(metsdata_dict, batchpath):
             ren_prefix = config['local_renaming_prefix'] + subdir + '_'
             for fptr in metsdata_dict[subdir]:
 
-                src = join(subdir, fptr['filename'] + config['extension'])
+                src = join(subdir, fptr['filename'])
 
                 #put the same zero padding in the new file name as found in the FILEID
                 template = '{}{:0' + str(len(fptr['seqno'])) + 'd}' + config['extension']
@@ -345,7 +363,7 @@ def rename_files(metsdata_dict, batchpath):
     except IOError as err:
         rpt('Error renaming files: {}'.format(err), True)
 
-    rpt('Renamed {} files\n'.format(count))
+    rpt('Renamed {} files'.format(count))
 
 
 def main():
@@ -356,7 +374,6 @@ def main():
     #default command line option values
     write_script = False
     execute_rename = False
-#    force = False
     config_file = None
     project = None
     batch = None
@@ -390,6 +407,12 @@ def main():
     # assign to global
     read_project_config(config_file, project)
 
+    #strict mode
+    if config['strict_mode']:
+        rpt('Running in strict mode')
+    else:
+        rpt('Running in non-strict mode')
+
     #init reporting
     config['report_path'] = join(config['project_path'], batch, batch + '-report.txt')
 
@@ -412,7 +435,7 @@ def main():
     if write_script or execute_rename:
         write_undo_script(metsdata_dict, batch)
 
-    rpt('Processing completed', True)
+    rpt('\nProcessing complete\n')
 
 if __name__ == "__main__":
     main()

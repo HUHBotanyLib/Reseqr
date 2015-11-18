@@ -20,6 +20,8 @@ Reseqr is written in Python3 (v.3.4) and can be run on Windows, OSX, and Linux m
    - reports on renaming results
    - uses an editable configuration file with each project's constant data
    - allows for concurrent projects
+   - run in strict or non-strict mode, allowing for files not listed in METS when proceeding with renaming actions
+   - can specify the number of unlisted files in non-strict mode before proceeding with renaming actions
 
 Basic operation includes validation and reporting in all cases.  Additionally the program can be run to either produce a Python script that will rename the files or to rename the files directly.
 
@@ -67,7 +69,9 @@ Actual image files are not used, only tiny text files named according to the exp
 
   - Batch1    No errors
   - Batch2
-  - Batch3
+  - Batch3    METS file with prefixes not matching subdir, no .jp2 files
+  - Batch4    Extra .jp2 file not listed in METS
+  - Batch5    Missing .jp2 file as listed in METS
 
 ## Deploying
 
